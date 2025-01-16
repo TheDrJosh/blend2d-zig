@@ -4,10 +4,14 @@ const blend2d_src_files = [_][]const u8{
     "api-globals.cpp",
     "api-nocxx.cpp",
     "array.cpp",
+    "array_test.cpp",
     "bitarray.cpp",
+    "bitarray_test.cpp",
     "bitset.cpp",
+    "bitset_test.cpp",
     "compopinfo.cpp",
     "context.cpp",
+    "context_test.cpp",
     "filesystem.cpp",
     "font.cpp",
     "fontdata.cpp",
@@ -63,6 +67,7 @@ const blend2d_src_files = [_][]const u8{
 
     //opentype
     "opentype/otcff.cpp",
+    "opentype/otcff_test.cpp",
     "opentype/otcmap.cpp",
     "opentype/otcore.cpp",
     "opentype/otface.cpp",
@@ -219,7 +224,7 @@ pub fn build(b: *std.Build) void {
     });
 
     blend2d.addIncludePath(blend2d_dep.path("3rdparty/asmjit/src"));
-    blend2d.defineCMacro("ASMJIT_STATIC", "");
+    blend2d.defineCMacro("ASMJIT_STATIC", "1");
 
     blend2d.linkLibCpp(); // maybe only need libc
 
