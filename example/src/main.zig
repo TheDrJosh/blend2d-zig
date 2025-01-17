@@ -102,76 +102,80 @@ pub fn main() !void {
     gl.VertexAttribPointer(0, 2, gl.FLOAT, gl.FALSE, 2 * @sizeOf(f32), 0);
     gl.EnableVertexAttribArray(0);
 
-    var img: blend2d.c.inner_c.BLImageCore = undefined;
-    _ = blend2d.c.inner_c.blImageInit(&img);
+    // var img: blend2d.c.BLImageCore = undefined;
+    // _ = blend2d.c.blImageInit(&img);
 
-    const result = blend2d.c.inner_c.blImageCreate(&img, width, height, blend2d.c.inner_c.BL_FORMAT_PRGB32);
-    defer _ = blend2d.c.inner_c.blImageDestroy(&img);
+    // const result = blend2d.c.blImageCreate(&img, width, height, blend2d.c.BL_FORMAT_PRGB32);
+    // defer _ = blend2d.c.blImageDestroy(&img);
 
-    if (result != blend2d.c.inner_c.BL_SUCCESS) {
-        return error.blend2d_fail;
-    }
+    // if (result != blend2d.c.BL_SUCCESS) {
+    //     return error.blend2d_fail;
+    // }
 
-    var ctx: blend2d.c.inner_c.BLContextCore = undefined;
-    _ = blend2d.c.inner_c.blContextInit(&ctx);
-    defer _ = blend2d.c.inner_c.blContextDestroy(&ctx);
+    // var ctx: blend2d.c.BLContextCore = undefined;
+    // _ = blend2d.c.blContextInit(&ctx);
+    // defer _ = blend2d.c.blContextDestroy(&ctx);
 
-    _ = blend2d.c.inner_c.blContextBegin(&ctx, &img, &blend2d.c.inner_c.BLContextCreateInfo{
-        .flags = 0,
-        .threadCount = 0,
-        .cpuFeatures = 0,
-        .commandQueueLimit = 0,
-        .savedStateLimit = 0,
-        .reserved = [1]u32{0},
-    });
+    // _ = blend2d.c.blContextBegin(&ctx, &img, &blend2d.c.BLContextCreateInfo{
+    //     .flags = 0,
+    //     .threadCount = 0,
+    //     .cpuFeatures = 0,
+    //     .commandQueueLimit = 0,
+    //     .savedStateLimit = 0,
+    //     .reserved = [1]u32{0},
+    // });
 
-    _ = blend2d.c.inner_c.blContextClearAll(&ctx);
+    // _ = blend2d.c.blContextClearAll(&ctx);
 
-    var path: blend2d.c.inner_c.BLPathCore = undefined;
-    _ = blend2d.c.inner_c.blPathInit(&path);
-    defer _ = blend2d.c.inner_c.blPathDestroy(&path);
+    // var path: blend2d.c.BLPathCore = undefined;
+    // _ = blend2d.c.blPathInit(&path);
+    // defer _ = blend2d.c.blPathDestroy(&path);
 
-    _ = blend2d.c.inner_c.blPathMoveTo(&path, 26, 31);
-    _ = blend2d.c.inner_c.blPathCubicTo(&path, 642, 132, 587, -136, 25, 464);
-    _ = blend2d.c.inner_c.blPathCubicTo(&path, 882, 404, 144, 267, 27, 31);
+    // _ = blend2d.c.blPathMoveTo(&path, 26, 31);
+    // _ = blend2d.c.blPathCubicTo(&path, 642, 132, 587, -136, 25, 464);
+    // _ = blend2d.c.blPathCubicTo(&path, 882, 404, 144, 267, 27, 31);
 
-    _ = blend2d.c.inner_c.blContextFillPathDRgba32(&ctx, &blend2d.c.inner_c.BLPoint{ .x = 0, .y = 0 }, &path, 0xFFFFFFFF);
+    // _ = blend2d.c.blContextFillPathDRgba32(&ctx, &blend2d.c.BLPoint{ .x = 0, .y = 0 }, &path, 0xFFFFFFFF);
 
-    _ = blend2d.c.inner_c.blContextEnd(&ctx);
+    // _ = blend2d.c.blContextEnd(&ctx);
 
-    // var codecs: blend2d.c.inner_c.BLArrayCore = undefined;
+    // // var codecs: blend2d.c.BLArrayCore = undefined;
 
-    // _ = blend2d.c.inner_c.blImageCodecArrayInitBuiltInCodecs(&codecs);
-    // defer _ = blend2d.c.inner_c.blArrayDestroy(&codecs);
+    // // _ = blend2d.c.blImageCodecArrayInitBuiltInCodecs(&codecs);
+    // // defer _ = blend2d.c.blArrayDestroy(&codecs);
 
-    // var codec: blend2d.c.inner_c.BLImageCodecCore = undefined;
-    // _ = blend2d.c.inner_c.blImageCodecInit(&codec);
-    // _ = blend2d.c.inner_c.blImageCodecFindByExtension(&codec, "png", 3, &codecs);
-    // defer _ = blend2d.c.inner_c.blImageCodecDestroy(&codec);
+    // // var codec: blend2d.c.BLImageCodecCore = undefined;
+    // // _ = blend2d.c.blImageCodecInit(&codec);
+    // // _ = blend2d.c.blImageCodecFindByExtension(&codec, "png", 3, &codecs);
+    // // defer _ = blend2d.c.blImageCodecDestroy(&codec);
 
-    // _ = blend2d.c.inner_c.blImageWriteToFile(&img, "test.png", &codec);
+    // // _ = blend2d.c.blImageWriteToFile(&img, "test.png", &codec);
 
-    var data: blend2d.c.inner_c.BLImageData = undefined;
-    _ = blend2d.c.inner_c.blImageGetData(&img, &data);
+    // var data: blend2d.c.BLImageData = undefined;
+    // _ = blend2d.c.blImageGetData(&img, &data);
 
-    // const img = try blend2d.Image.init(width, height, .PRGB32);
-    // defer img.deinit();
+    var img = try blend2d.Image.init(width, height, .PRGB32, null);
+    defer img.deinit();
 
-    // const ctx = try blend2d.Context.init(&img, .{});
-    // defer ctx.deinit();
+    var ctx = try blend2d.Context.init(null);
+    defer ctx.deinit();
 
-    // const path = try blend2d.Path.init();
-    // defer path.deinit();
+    try ctx.begin(&img, .{});
 
-    // try path.moveTo(26, 31);
-    // try path.cubicTo(642, 132, 587, -136, 25, 464);
-    // try path.cubicTo(882, 404, 144, 267, 27, 31);
+    try ctx.clearAll();
 
-    // try ctx.fillPath(&path, &blend2d.Point{ .x = 0, .y = 0 }, .{ .rgb32 = .{ .r = 255, .g = 255, .b = 255, .a = 255 } });
+    var path = try blend2d.Path.init(null);
+    defer path.deinit();
 
-    // try ctx.end();
+    try path.moveTo(26, 31);
+    try path.cubicTo(642, 132, 587, -136, 25, 464);
+    try path.cubicTo(882, 404, 144, 267, 27, 31);
 
-    // img.writeToFile("test.png");
+    try ctx.fillPath(&.{ .x = 0, .y = 0 }, &path, .{ .rgba32 = .{ .r = 255, .g = 255, .b = 255, .a = 255 } });
+
+    try ctx.end();
+
+    try img.writeToFile("test.png");
 
     // const data = img.getData();
 
@@ -185,7 +189,7 @@ pub fn main() !void {
 
     // const pixels = [1]Pixel{Pixel{ .red = 255, .green = 0, .blue = 0, .alpha = 255 }} ** (width * height);
 
-    gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, data.pixelData);
+    // gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, data.pixelData);
     gl.GenerateMipmap(gl.TEXTURE_2D);
 
     // Wait for the user to close the window.

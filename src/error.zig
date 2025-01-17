@@ -10,7 +10,7 @@ pub const Blend2DError = error{
     NotInitialized,
     NotImplemented,
     NotPermitted,
-    Io,
+    IO,
     Busy,
     Interrupted,
     TryAgain,

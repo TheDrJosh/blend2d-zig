@@ -2,26 +2,76 @@ const std = @import("std");
 const c = @import("c.zig");
 const e = @import("error.zig");
 
+const reexports = @import("reexports.zig");
+
 const Image = @import("image.zig");
+const Path = @import("path.zig");
 
 const Context = @This();
 
-inner: c.BLContextCore,
+const Inner = union(enum) {
+    stack: c.BLContextCore,
+    alloc: struct {
+        ptr: *c.BLContextCore,
+        allocator: std.mem.Allocator,
+    },
+    ptr: *c.BLContextCore,
+};
 
-pub fn init() e.Blend2DError!Context {
-    const self = Context{
-        .inner = undefined,
+inner: Inner,
+
+pub fn getInnerPtr(self: *Context) *c.BLContextCore {
+    return switch (self.inner) {
+        .stack => |*i| i,
+        .alloc => |p| p.ptr,
+        .ptr => |p| p,
     };
-
-    try e.makeZigError(c.blContextInit(
-        &self.inner,
-    ));
-
-    return self;
 }
 
-pub fn deinit(self: Context) e.Blend2DError!void {
-    try e.makeZigError(c.blContextDestroy(&self.inner));
+pub fn getInnerPtrConst(self: *const Context) *const c.BLContextCore {
+    return switch (self.inner) {
+        .stack => |*i| i,
+        .alloc => |p| p.ptr,
+        .ptr => |p| p,
+    };
+}
+
+pub fn init(allocator: ?std.mem.Allocator) (e.Blend2DError || std.mem.Allocator.Error)!Context {
+    if (allocator) |alloc| {
+        const p = try alloc.create(c.BLContextCore);
+        errdefer alloc.destroy(p);
+        try e.makeZigError(c.blContextInit(p));
+
+        return Context{
+            .inner = .{
+                .alloc = .{
+                    .ptr = p,
+                    .allocator = alloc,
+                },
+            },
+        };
+    } else {
+        var context: c.BLContextCore = undefined;
+        try e.makeZigError(c.blContextInit(&context));
+
+        return Context{
+            .inner = .{
+                .stack = context,
+            },
+        };
+    }
+}
+
+pub fn deinit(self: *Context) void {
+    e.makeZigError(c.blContextDestroy(self.getInnerPtr())) catch |err| {
+        std.debug.print("{any}\n", .{err});
+    };
+    switch (self.inner) {
+        .alloc => |a| {
+            a.allocator.destroy(a.ptr);
+        },
+        else => {},
+    }
 }
 
 pub const Type = enum(u32) {
@@ -31,40 +81,40 @@ pub const Type = enum(u32) {
 };
 
 pub fn getType(self: Context) Type {
-    return c.blContextGetType(&self.inner);
+    return c.blContextGetType(&self.getInnerPtrConst());
 }
 
 pub fn getSize(self: Context) e.Blend2DError!c.BLSize {
     var size: c.BLSize = undefined;
-    try e.makeZigError(c.blContextGetTargetSize(&self.inner, &size));
+    try e.makeZigError(c.blContextGetTargetSize(self.getInnerPtrConst(), &size));
     return size;
 }
 
 pub const CreateInfo = struct {
     const Flags = packed struct(u32) {
-        disable_jit: bool, //00000001
+        disable_jit: bool = false, //00000001
         _1: u19 = 0,
-        fallback_to_sync: bool, //00100000
+        fallback_to_sync: bool = false, //00100000
         _2: u3 = 0,
-        isolated_thread_pool: bool, //01000000
-        isolated_jit_runtime: bool, //02000000
-        isolated_jit_logging: bool, //04000000
+        isolated_thread_pool: bool = false, //01000000
+        isolated_jit_runtime: bool = false, //02000000
+        isolated_jit_logging: bool = false, //04000000
         _3: u5 = 0,
     };
-    flags: Flags,
-    thread_count: u32,
-    cpu_feature: u32,
-    command_queue_limit: u32,
-    saved_state_limit: u32,
-    pixel_orgin: c.BLPointI,
+    flags: Flags = .{},
+    thread_count: u32 = 0,
+    cpu_features: u32 = 0,
+    command_queue_limit: u32 = 0,
+    saved_state_limit: u32 = 0,
+    pixel_orgin: reexports.PointI = .{},
 
     fn toC(self: CreateInfo) c.BLContextCreateInfo {
         return c.BLContextCreateInfo{
             .flags = @bitCast(self.flags),
             .threadCount = self.thread_count,
-            .cpuFeature = self.cpu_feature,
+            .cpuFeatures = self.cpu_features,
             .commandQueueLimit = self.command_queue_limit,
-            .saveStateLimit = self.saved_state_limit,
+            .savedStateLimit = self.saved_state_limit,
             .pixelOrigin = self.pixel_orgin,
         };
     }
@@ -72,17 +122,17 @@ pub const CreateInfo = struct {
 
 //TODO - blContextGetTargetImage
 
-pub fn begin(self: Context, image: Image, create_info: CreateInfo) e.Blend2DError!void {
+pub fn begin(self: *Context, image: *Image, create_info: CreateInfo) e.Blend2DError!void {
     try e.makeZigError(c.blContextBegin(
-        &self.inner,
-        &image.inner,
+        self.getInnerPtr(),
+        image.getInnerPtr(),
         &create_info.toC(),
     ));
 }
 
-pub fn end(self: e.Blend2DError!Context) e.Blend2DError!void {
+pub fn end(self: *Context) e.Blend2DError!void {
     try e.makeZigError(c.blContextEnd(
-        &self.inner,
+        self.getInnerPtr(),
     ));
 }
 
@@ -128,5 +178,42 @@ pub fn flush(self: Context, sync: bool) e.Blend2DError!void {
 //TODO - blContextGetHint
 //TODO - blContextSetHint
 
+pub fn clearAll(self: *Context) e.Blend2DError!void {
+    try e.makeZigError(c.blContextClearAll(
+        self.getInnerPtr(),
+    ));
+}
 
+const Color = union(enum) {
+    rgba32: packed struct(u32) {
+        a: u8,
+        b: u8,
+        g: u8,
+        r: u8,
+    },
+    rgba64: packed struct(u64) {
+        a: u16,
+        b: u16,
+        g: u16,
+        r: u16,
+    },
+    style: void,
+};
 
+pub fn fillPath(self: *Context, origin: *const reexports.Point, path: *const Path, color: ?Color) e.Blend2DError!void {
+    if (color) |col| {
+        switch (col) {
+            .rgba32 => |c32| {
+                try e.makeZigError(c.blContextFillPathDRgba32(self.getInnerPtr(), origin, path.getInnerPtrConst(), @bitCast(c32)));
+            },
+            .rgba64 => |c64| {
+                try e.makeZigError(c.blContextFillPathDRgba64(self.getInnerPtr(), origin, path.getInnerPtrConst(), @bitCast(c64)));
+            },
+            .style => {
+                //blContextFillPathDExt
+            },
+        }
+    } else {
+        try e.makeZigError(c.blContextFillPathD(self.getInnerPtr(), origin, path.getInnerPtrConst()));
+    }
+}
