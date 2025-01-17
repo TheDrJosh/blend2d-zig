@@ -32,8 +32,8 @@
             .hash = "12209d8a018832bee15d9da29a12fa753d89b56cd843cdf1f39501546c6467e38ba1",
         },
         .@"blend2d-zig" = .{
-            .url = "git+https://github.com/TheDrJosh/blend2d-zig#73067d7830e23c56243ec5c91bef27075b75d993",
-            .hash = "1220f1e266f6d61325300c9d9497aacc126303cf4cb7c50beafea41bc7c6eed6430a",
+            .url = "git+https://github.com/TheDrJosh/blend2d-zig#20cdc0bfeffaa9dce6385718e881c11533798ad5",
+            .hash = "12208e0f0fdf5ca27a2015121cbe7b897d04484617bc28c6beda3dccc5332c3586a8",
         },
     },
     .paths = .{

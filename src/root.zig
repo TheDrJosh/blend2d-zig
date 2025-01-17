@@ -1,7 +1,5 @@
 const std = @import("std");
-// pub const c = @import("c.zig");
-
-pub const c = @cImport(@cInclude("blend2d.h"));
+pub const c = @import("c.zig");
 
 const e = @import("error.zig");
 
