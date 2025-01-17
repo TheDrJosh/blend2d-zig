@@ -1,3 +1,3 @@
-const inner_c = @cImport(@cInclude("blend2d.h"));
+pub const inner_c = @cImport(@cInclude("blend2d.h"));
 
-usingnamespace inner_c;
+// usingnamespace inner_c;
